@@ -1,0 +1,149 @@
+openapi: 3.0.0
+info:
+  title: Account Service API
+  description: API para gestionar cuentas bancarias
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /cuentas:
+    post:
+      summary: Crear una nueva cuenta para un cliente
+      operationId: crearCuenta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CuentaRequest'
+      responses:
+        '201':
+          description: Cuenta creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CuentaResponse'
+        '400':
+          description: Datos inválidos o cuenta existente
+    get:
+      summary: Listar todas las cuentas bancarias
+      operationId: listarCuentas
+      responses:
+        '200':
+          description: Lista de cuentas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CuentaResponse'
+  /cuentas/{id}:
+    get:
+      summary: Obtener detalles de una cuenta
+      operationId: obtenerCuenta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles de la cuenta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CuentaResponse'
+        '404':
+          description: Cuenta no encontrada
+    delete:
+      summary: Eliminar una cuenta bancaria
+      operationId: eliminarCuenta
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Cuenta eliminada
+        '404':
+          description: Cuenta no encontrada
+  /cuentas/{cuentaId}/depositar:
+    put:
+      summary: Realizar un depósito en una cuenta bancaria
+      operationId: depositar
+      parameters:
+        - name: cuentaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransaccionRequest'
+      responses:
+        '200':
+          description: Depósito realizado exitosamente
+        '400':
+          description: Error en el depósito
+  /cuentas/{cuentaId}/retirar:
+    put:
+      summary: Realizar un retiro de una cuenta bancaria
+      operationId: retirar
+      parameters:
+        - name: cuentaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransaccionRequest'
+      responses:
+        '200':
+          description: Retiro realizado exitosamente
+        '400':
+          description: Fondos insuficientes o error en el retiro
+components:
+  schemas:
+    CuentaRequest:
+      type: object
+      description: "Detalles para crear una cuenta bancaria"
+      properties:
+        tipoCuenta:
+          type: string
+          enum: [AHORROS, CORRIENTE]
+        clienteId:
+          type: integer
+    CuentaResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        numeroCuenta:
+          type: string
+        saldo:
+          type: number
+          format: double
+        tipoCuenta:
+          type: string
+          enum: [AHORROS, CORRIENTE]
+        clienteId:
+          type: integer
+    TransaccionRequest:
+      type: object
+      properties:
+        monto:
+          type: number
+          format: double
+        tipoTransaccion:
+          type: string
+          enum: [DEPOSITO, RETIRO]
