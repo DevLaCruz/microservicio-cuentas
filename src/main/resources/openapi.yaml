@@ -6,7 +6,7 @@ info:
 servers:
   - url: http://localhost:8080
 paths:
-  /cuentas:
+  /accounts:
     post:
       summary: Crear una nueva cuenta para un cliente
       operationId: crearCuenta
@@ -37,7 +37,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CuentaResponse'
-  /cuentas/{id}:
+  /accounts/{id}:
     get:
       summary: Obtener detalles de una cuenta
       operationId: obtenerCuenta
@@ -70,7 +70,7 @@ paths:
           description: Cuenta eliminada
         '404':
           description: Cuenta no encontrada
-  /cuentas/{cuentaId}/depositar:
+  /accounts/{cuentaId}/depositar:
     put:
       summary: Realizar un depósito en una cuenta bancaria
       operationId: depositar
@@ -91,7 +91,7 @@ paths:
           description: Depósito realizado exitosamente
         '400':
           description: Error en el depósito
-  /cuentas/{cuentaId}/retirar:
+  /accounts/{cuentaId}/retirar:
     put:
       summary: Realizar un retiro de una cuenta bancaria
       operationId: retirar

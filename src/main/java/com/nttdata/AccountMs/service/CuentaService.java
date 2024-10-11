@@ -1,5 +1,6 @@
 package com.nttdata.AccountMs.service;
 
+import com.nttdata.AccountMs.exception.CuentaException;
 import com.nttdata.AccountMs.model.Cuenta;
 import com.nttdata.AccountMs.model.TipoCuentaEnum;
 import com.nttdata.AccountMs.model.CuentaRequest;
@@ -7,7 +8,9 @@ import com.nttdata.AccountMs.model.CuentaResponse;
 import com.nttdata.AccountMs.repository.CuentaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,15 +21,37 @@ public class CuentaService {
     @Autowired
     private CuentaRepository cuentaRepository;
 
+    @Autowired
+    private RestTemplate restTemplate; // Agregar RestTemplate
+
+    private final String URL_CLIENTE_SERVICE = "http://localhost:8080/clientes/"; // URL del otro microservicio
+
     public CuentaResponse crearCuenta(CuentaRequest cuentaRequest) {
+
+        ResponseEntity<Void> response = restTemplate.getForEntity(URL_CLIENTE_SERVICE + cuentaRequest.getClienteId(), Void.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            // El cliente existe, puedes proceder a crear la cuenta
+        } else {
+            throw new IllegalArgumentException("El cliente no existe");
+        }
+
         Cuenta cuenta = new Cuenta();
         cuenta.setClienteId(cuentaRequest.getClienteId());
         cuenta.setTipoCuenta(convertirTipoCuenta(cuentaRequest.getTipoCuenta()));
-        cuenta.setNumeroCuenta(cuentaRequest.getTipoCuenta().name());
-        cuenta.setSaldo(cuenta.getSaldo()); // Cambiado aquí
+        // Generar el número de cuenta automáticamente
+        String numeroCuenta = generarNumeroCuenta();
+        cuenta.setNumeroCuenta(numeroCuenta);
+
+        cuenta.setSaldo(0.0);
 
         Cuenta savedCuenta = cuentaRepository.save(cuenta);
         return convertToResponse(savedCuenta);
+    }
+
+    private String generarNumeroCuenta() {
+        String numeroSecuencial = String.valueOf(System.currentTimeMillis()); // Ejemplo simple usando timestamp
+        return numeroSecuencial;
     }
 
 
@@ -110,12 +135,21 @@ public class CuentaService {
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new EntityNotFoundException("Cuenta no encontrada"));
 
-        if (cuenta.getSaldo() < monto) {
-            return false; // Fondos insuficientes
+        // Permitir sobregiro solo para cuentas corrientes
+        if (cuenta.getTipoCuenta() == TipoCuentaEnum.CORRIENTE) {
+            if (cuenta.getSaldo() - monto < -500) {
+                return false; // Fondos insuficientes para sobregiro
+            }
+        } else { // Para otras cuentas, no permitir sobregiro
+            if (cuenta.getSaldo() < monto) {
+                throw new CuentaException("Fondos insuficientes para realizar el retiro.");
+            }
         }
 
+        // Realizar la retirada
         cuenta.setSaldo(cuenta.getSaldo() - monto); // Restar el monto del saldo
         cuentaRepository.save(cuenta);
         return true;
     }
+
 }
