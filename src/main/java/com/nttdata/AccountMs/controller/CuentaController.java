@@ -1,6 +1,6 @@
 package com.nttdata.AccountMs.controller;
 
-import com.nttdata.AccountMs.api.CuentasApiDelegate;
+import com.nttdata.AccountMs.api.AccountsApiDelegate;
 import com.nttdata.AccountMs.model.CuentaRequest;
 import com.nttdata.AccountMs.model.CuentaResponse;
 import com.nttdata.AccountMs.model.TransaccionRequest;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 
 
 @RestController
-@RequestMapping("cuenta")
-public class CuentaController implements CuentasApiDelegate {
+@RequestMapping("cuentas")
+public class CuentaController implements AccountsApiDelegate {
 
     @Autowired
     private CuentaService cuentaService;
